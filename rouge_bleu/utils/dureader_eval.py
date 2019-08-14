@@ -38,9 +38,11 @@ def normalize(s):
 
     Args:
         s: a list of strings.
+        Example input: ['到淘宝首页，点击话费，填写要充值的手机号并通过支付宝支付即可。从2133MHz起']
 
     Returns:
         A list of normalized strings.
+        Example output: ['到 淘 宝 首 页 ， 点 击 话 费 ， 填 写 要 充 值 的 手 机 号 并 通 过 支 付 宝 支 付 即 可 。 从 2 1 3 3 M H z 起']
     """
     if not s:
         return s
@@ -127,13 +129,19 @@ def compute_bleu_rouge(pred_dict, ref_dict, bleu_order=4):
     Compute bleu and rouge scores.
     """
     assert set(pred_dict.keys()) == set(ref_dict.keys()), \
-            "missing keys: {}".format(set(ref_dict.keys()) - set(pred_dict.keys()))
+        "missing keys: {}".format(set(ref_dict.keys()) - set(pred_dict.keys()))
+
     scores = {}
+
+    # calculate bleu
     bleu_scores, _ = Bleu(bleu_order).compute_score(ref_dict, pred_dict)
     for i, bleu_score in enumerate(bleu_scores):
         scores['Bleu-%d' % (i + 1)] = bleu_score
+
+    # calculate rouge-l
     rouge_score, _ = Rouge().compute_score(ref_dict, pred_dict)
     scores['Rouge-L'] = rouge_score
+
     return scores
 
 

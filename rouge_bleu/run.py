@@ -43,12 +43,23 @@ def run_eval(pred_answers_list, ref_answers_list):
 
     # compute the bleu and rouge scores if reference answers is provided
     if len(ref_answers) > 0:
+
+        assert len(pred_answers) == len(ref_answers), \
+            "length distinguish: (pred_len={}) != (ref_len={})".format(len(pred_answers), len(ref_answers))
+
+        pred_ids, ref_ids = [], []
         pred_dict, ref_dict = {}, {}
         for pred, ref in zip(pred_answers, ref_answers):
-            question_id = ref['question_id']
+            question_id_pred = pred['question_id']
+            question_id_ref = ref['question_id']
+            pred_ids.append(question_id_pred)
+            ref_ids.append(question_id_ref)
             if len(ref['answers']) > 0:
-                pred_dict[question_id] = normalize(pred['answers'])
-                ref_dict[question_id] = normalize(ref['answers'])
+                pred_dict[question_id_pred] = normalize(pred['answers'])
+                ref_dict[question_id_ref] = normalize(ref['answers'])
+
+        assert set(pred_ids) == set(ref_ids), "There have different ids in both files."
+
         bleu_rouge = compute_bleu_rouge(pred_dict, ref_dict)
     else:
         bleu_rouge = None

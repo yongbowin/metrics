@@ -18,7 +18,7 @@ class Bleu:
         self._hypo_for_image = {}
         self.ref_for_image = {}
 
-    def compute_score(self, gts, res):
+    def compute_score(self, gts, res):  # (ref_dict, pred_dict)
 
         assert(list(gts.keys()) == list(res.keys()))
         imgIds = list(gts.keys())
@@ -30,15 +30,15 @@ class Bleu:
 
             # Sanity check.
             assert(type(hypo) is list)
-            assert(len(hypo) == 1)
+            assert(len(hypo) == 1)  # prediction results nums must equal to 1
             assert(type(ref) is list)
-            assert(len(ref) >= 1)
+            assert(len(ref) >= 1)  # reference answers nums may >1
 
             bleu_scorer += (hypo[0], ref)
 
-        #score, scores = bleu_scorer.compute_score(option='shortest')
+        # score, scores = bleu_scorer.compute_score(option='shortest')
         score, scores = bleu_scorer.compute_score(option='closest', verbose=1)
-        #score, scores = bleu_scorer.compute_score(option='average', verbose=1)
+        # score, scores = bleu_scorer.compute_score(option='average', verbose=1)
 
         # return (bleu, bleu_info)
         return score, scores

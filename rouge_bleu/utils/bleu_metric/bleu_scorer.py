@@ -20,6 +20,7 @@ import copy
 import sys, math, re
 from collections import defaultdict
 
+
 def precook(s, n=4, out=False):
     """Takes a string as input and returns an object that can be given to
     either cook_refs or cook_test. This is optional: cook_refs and cook_test
@@ -31,6 +32,7 @@ def precook(s, n=4, out=False):
             ngram = tuple(words[i:i+k])
             counts[ngram] += 1
     return (len(words), counts)
+
 
 def cook_refs(refs, eff=None, n=4): ## lhuang: oracle will call with "average"
     '''Takes a list of reference sentences for a single segment
@@ -57,6 +59,7 @@ def cook_refs(refs, eff=None, n=4): ## lhuang: oracle will call with "average"
 
     return (reflen, maxcounts)
 
+
 def cook_test(test, xxx_todo_changeme, eff=None, n=4):
     '''Takes a test sentence and returns an object that
     encapsulates everything that BLEU needs to know about it.'''
@@ -81,6 +84,7 @@ def cook_test(test, xxx_todo_changeme, eff=None, n=4):
         result["correct"][len(ngram)-1] += min(refmaxcounts.get(ngram,0), count)
 
     return result
+
 
 class BleuScorer(object):
     """Bleu scorer.
@@ -117,7 +121,7 @@ class BleuScorer(object):
             else:
                 self.ctest.append(None) # lens of crefs and ctest have to match
 
-        self._score = None ## need to recompute
+        self._score = None  # need to recompute
 
     def ratio(self, option=None):
         self.compute_score(option=option)
@@ -196,9 +200,14 @@ class BleuScorer(object):
         return self.compute_score(option, verbose)
         
     def compute_score(self, option=None, verbose=0):
+        """
+        :param option: 'closest'
+        :param verbose: 1
+        :return:
+        """
         n = self.n
         small = 1e-9
-        tiny = 1e-15 ## so that if guess is 0 still return 0
+        tiny = 1e-15  # so that if guess is 0 still return 0
         bleu_list = [[] for _ in range(n)]
 
         if self._score is not None:
