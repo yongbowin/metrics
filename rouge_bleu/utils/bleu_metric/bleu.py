@@ -36,6 +36,8 @@ class Bleu:
 
             bleu_scorer += (hypo[0], ref)
 
+            # print("(hypo[0], ref) ******> ", (hypo[0], ref))
+
         # score, scores = bleu_scorer.compute_score(option='shortest')
         score, scores = bleu_scorer.compute_score(option='closest', verbose=1)
         # score, scores = bleu_scorer.compute_score(option='average', verbose=1)

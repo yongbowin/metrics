@@ -25,27 +25,55 @@ def precook(s, n=4, out=False):
     """Takes a string as input and returns an object that can be given to
     either cook_refs or cook_test. This is optional: cook_refs and cook_test
     can take string arguments as well."""
-    words = s.split()
+
+    """counts
+    {
+        ('可',): 1, 
+        ('以',): 1, 
+        ('玩',): 1, 
+        ('而',): 1, 
+        ('已',): 1, 
+        ('。',): 1, 
+        ('可', '以'): 1, 
+        ('以', '玩'): 1, 
+        ('玩', '而'): 1, 
+        ('而', '已'): 1, 
+        ('已', '。'): 1, 
+        ('可', '以', '玩'): 1, 
+        ('以', '玩', '而'): 1, 
+        ('玩', '而', '已'): 1, 
+        ('而', '已', '。'): 1, 
+        ('可', '以', '玩', '而'): 1, 
+        ('以', '玩', '而', '已'): 1, 
+        ('玩', '而', '已', '。'): 1
+    }
+    """
+
+    words = s.split()  # ['可', '以', '玩', '而', '已', '。'], len=6
     counts = defaultdict(int)
-    for k in range(1,n+1):
+    for k in range(1, n+1):  # for k in [1, 2, 3, 4], denotes [1-gram, 2-gram, 3-gram, 4-gram]
         for i in range(len(words)-k+1):
             ngram = tuple(words[i:i+k])
             counts[ngram] += 1
+            # print((k, i, ngram), counts)
     return (len(words), counts)
 
 
-def cook_refs(refs, eff=None, n=4): ## lhuang: oracle will call with "average"
+def cook_refs(refs, eff=None, n=4):  # lhuang: oracle will call with "average"
     '''Takes a list of reference sentences for a single segment
     and returns an object that encapsulates everything that BLEU
     needs to know about them.'''
 
-    reflen = []
+    """
+    refs = ["xxx-1", "xxx-2", ...], has N reference answers.
+    """
+    reflen = []  # each reference answer length list
     maxcounts = {}
     for ref in refs:
         rl, counts = precook(ref, n)
         reflen.append(rl)
-        for (ngram,count) in counts.items():
-            maxcounts[ngram] = max(maxcounts.get(ngram,0), count)
+        for (ngram, count) in counts.items():
+            maxcounts[ngram] = max(maxcounts.get(ngram, 0), count)
 
     # Calculate effective reference sentence length.
     if eff == "shortest":
@@ -53,9 +81,9 @@ def cook_refs(refs, eff=None, n=4): ## lhuang: oracle will call with "average"
     elif eff == "average":
         reflen = float(sum(reflen))/len(reflen)
 
-    ## lhuang: N.B.: leave reflen computaiton to the very end!!
+    # lhuang: N.B.: leave reflen computaiton to the very end!!
     
-    ## lhuang: N.B.: in case of "closest", keep a list of reflens!! (bad design)
+    # lhuang: N.B.: in case of "closest", keep a list of reflens!! (bad design)
 
     return (reflen, maxcounts)
 
@@ -72,16 +100,19 @@ def cook_test(test, xxx_todo_changeme, eff=None, n=4):
     
     if eff == "closest":
         result["reflen"] = min((abs(l-testlen), l) for l in reflen)[1]
-    else: ## i.e., "average" or "shortest" or None
+    else:  # i.e., "average" or "shortest" or None
         result["reflen"] = reflen
 
     result["testlen"] = testlen
 
-    result["guess"] = [max(0,testlen-k+1) for k in range(1,n+1)]
+    result["guess"] = [max(0, testlen-k+1) for k in range(1, n+1)]
 
     result['correct'] = [0]*n
     for (ngram, count) in counts.items():
-        result["correct"][len(ngram)-1] += min(refmaxcounts.get(ngram,0), count)
+        """
+        Calculate the nums of same ngram both in `test` and `ref`
+        """
+        result["correct"][len(ngram)-1] += min(refmaxcounts.get(ngram, 0), count)
 
     return result
 
@@ -111,15 +142,20 @@ class BleuScorer(object):
         self.special_reflen = special_reflen
 
     def cook_append(self, test, refs):
-        '''called by constructor and __iadd__ to avoid creating new instances.'''
+        '''
+        called by constructor and __iadd__ to avoid creating new instances.
+
+        test = '可 以 玩 而 已 。'
+        refs = ['可 以 玩 而 已 。']
+        '''
         
         if refs is not None:
             self.crefs.append(cook_refs(refs))
             if test is not None:
                 cooked_test = cook_test(test, self.crefs[-1])
-                self.ctest.append(cooked_test) ## N.B.: -1
+                self.ctest.append(cooked_test)  # N.B.: -1
             else:
-                self.ctest.append(None) # lens of crefs and ctest have to match
+                self.ctest.append(None)  # lens of crefs and ctest have to match
 
         self._score = None  # need to recompute
 
@@ -166,13 +202,17 @@ class BleuScorer(object):
         '''add an instance (e.g., from another sentence).'''
 
         if type(other) is tuple:
-            ## avoid creating new BleuScorer instances
+            # avoid creating new BleuScorer instances
+            """
+            other[0] = '可 以 玩 而 已 。'
+            other[1] = ['可 以 玩 而 已 。']
+            """
             self.cook_append(other[0], other[1])
         else:
             assert self.compatible(other), "incompatible BLEUs."
             self.ctest.extend(other.ctest)
             self.crefs.extend(other.crefs)
-            self._score = None ## need to recompute
+            self._score = None  # need to recompute
 
         return self        
 
@@ -218,21 +258,21 @@ class BleuScorer(object):
 
         self._testlen = 0
         self._reflen = 0
-        totalcomps = {'testlen':0, 'reflen':0, 'guess':[0]*n, 'correct':[0]*n}
+        totalcomps = {'testlen': 0, 'reflen': 0, 'guess': [0]*n, 'correct': [0]*n}
 
         # for each sentence
-        for comps in self.ctest:            
+        for comps in self.ctest:
             testlen = comps['testlen']
             self._testlen += testlen
 
-            if self.special_reflen is None: ## need computation
+            if self.special_reflen is None:  # need computation
                 reflen = self._single_reflen(comps['reflen'], option, testlen)
             else:
                 reflen = self.special_reflen
 
             self._reflen += reflen
-                
-            for key in ['guess','correct']:
+
+            for key in ['guess', 'correct']:
                 for k in range(n):
                     totalcomps[key][k] += comps[key][k]
 
@@ -242,7 +282,7 @@ class BleuScorer(object):
                 bleu *= (float(comps['correct'][k]) + tiny) \
                         /(float(comps['guess'][k]) + small) 
                 bleu_list[k].append(bleu ** (1./(k+1)))
-            ratio = (testlen + tiny) / (reflen + small) ## N.B.: avoid zero division
+            ratio = (testlen + tiny) / (reflen + small)  # N.B.: avoid zero division
             if ratio < 1:
                 for k in range(n):
                     bleu_list[k][-1] *= math.exp(1 - 1/ratio)
@@ -259,7 +299,7 @@ class BleuScorer(object):
             bleu *= float(totalcomps['correct'][k] + tiny) \
                     / (totalcomps['guess'][k] + small)
             bleus.append(bleu ** (1./(k+1)))
-        ratio = (self._testlen + tiny) / (self._reflen + small) ## N.B.: avoid zero division
+        ratio = (self._testlen + tiny) / (self._reflen + small)  # N.B.: avoid zero division
         if ratio < 1:
             for k in range(n):
                 bleus[k] *= math.exp(1 - 1/ratio)
