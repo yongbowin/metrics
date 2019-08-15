@@ -39,8 +39,6 @@ def my_lcs(string, sub):  # (reference sentence tokens list, candidate sentence 
     """
     lengths = [[0 for i in range(0, len(sub) + 1)] for j in range(0, len(string) + 1)]
 
-    print(lengths)
-
     for j in range(1, len(sub) + 1):
         for i in range(1, len(string) + 1):
             if string[i - 1] == sub[j - 1]:
@@ -48,7 +46,6 @@ def my_lcs(string, sub):  # (reference sentence tokens list, candidate sentence 
             else:
                 lengths[i][j] = max(lengths[i - 1][j], lengths[i][j - 1])
 
-    print(lengths)
     """
     [
         [0, 0, 0, 0, 0, 0, 0], 
